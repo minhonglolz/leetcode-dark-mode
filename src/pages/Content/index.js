@@ -1,7 +1,21 @@
-import { printLine } from './modules/print';
+import { getIsEnabled } from '../../storage'
 import './style/problem.sass'
 
-console.log('Content script works!');
-console.log('Must reload extension for modifications to take effect.');
+const { BODY_CLASS_NAME, ENABLED_STORAGE_KEY } = require('../../constants')
 
-printLine("Using the 'printLine' function from the Print Module");
+const $body = document.querySelector('body')
+
+const enable = () => $body.classList.add(BODY_CLASS_NAME)
+const disable = () => $body.classList.remove(BODY_CLASS_NAME)
+const toggle = (value) => (value ? enable : disable)()
+
+async function init() {
+  toggle(await getIsEnabled())
+}
+
+init()
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace !== 'sync') return
+  toggle(changes[ENABLED_STORAGE_KEY].newValue)
+})
